@@ -74,7 +74,7 @@ ors_url <- function() {
   getOption('openrouteservice.url', "https://api.openrouteservice.org")
 }
 
-#' @importFrom httr modify_url
+#' @importFrom httr modify_url parse_url
 api_call <- function(path, method, query, ...,
                      response_format = c("json", "xml"),
                      parse_output = NULL, simplifyMatrix = TRUE) {
@@ -85,7 +85,14 @@ api_call <- function(path, method, query, ...,
   if (!is.null(new_path))
     path <- new_path
 
-  url <- modify_url(ors_url(), path = path, query = query)
+  # modify_url will replace the entire path element
+  # if ors_url() contains a path we will need to append
+  # these together.
+  orsurl <- ors_url()
+  orsurlpath <- parse_url(orsurl)$path
+  path <- paste0(orsurlpath, path)
+  
+  url <- modify_url(orsurl, path = path, query = query)
 
   if (isTRUE(getOption('openrouteservice.verbose')))
     message(url)
